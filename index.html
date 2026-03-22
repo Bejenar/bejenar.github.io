@@ -261,14 +261,10 @@
 
       const start = performance.now();
       try {
-        const res = await fetch(ENDPOINT, { method: 'GET', mode: 'no-cors', cache: 'no-store' });
+        const res = await fetch(ENDPOINT, { method: 'GET', mode: 'cors', cache: 'no-store' });
         const elapsed = Math.round(performance.now() - start);
-        // With no-cors the response type is 'opaque'; a response object means the
-        // host is reachable, even though we cannot read status/headers due to CORS.
-        // When CORS allows the response, verify it is a 2xx success code.
-        const isOpaque = res.type === 'opaque';
-        const isSuccess = isOpaque || (res.status >= 200 && res.status < 300);
-        const code = isOpaque ? 'Reachable (CORS restricted)' : String(res.status);
+        const isSuccess = res.status >= 200 && res.status < 300;
+        const code = String(res.status);
 
         if (isSuccess) {
           setState('up', 'Operational');
