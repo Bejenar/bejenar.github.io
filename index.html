@@ -125,6 +125,8 @@
     .state-down  .pulse-ring::before    { border-color: #ff4d6a; }
     .state-checking .pulse-ring span    { background: #f0b429; }
     .state-checking .pulse-ring::before { border-color: #f0b429; }
+    .state-unknown  .pulse-ring span    { background: #f0b429; }
+    .state-unknown  .pulse-ring::before { border-color: #f0b429; }
 
     .status-text {
       font-size: 1.1rem;
@@ -133,6 +135,7 @@
     .state-up    .status-text { color: #22d47a; }
     .state-down  .status-text { color: #ff4d6a; }
     .state-checking .status-text { color: #f0b429; }
+    .state-unknown  .status-text { color: #f0b429; }
 
     /* Detail row */
     .detail-row {
@@ -261,22 +264,28 @@
 
       const start = performance.now();
       try {
-        const res = await fetch(ENDPOINT, { method: 'GET', mode: 'no-cors', cache: 'no-store' });
-        const elapsed = Math.round(performance.now() - start);
-        // With no-cors the response type is 'opaque'; a response object means the
-        // host is reachable, even though we cannot read status/headers due to CORS.
-        // When CORS allows the response, verify it is a 2xx success code.
-        const isOpaque = res.type === 'opaque';
-        const isSuccess = isOpaque || (res.status >= 200 && res.status < 300);
-        const code = isOpaque ? 'Reachable (CORS restricted)' : String(res.status);
+        let res, isOpaque = false;
+        try {
+          res = await fetch(ENDPOINT, { method: 'GET', mode: 'cors', cache: 'no-store' });
+        } catch (_corsErr) {
+          // CORS not supported; fall back to no-cors to test basic reachability.
+          res = await fetch(ENDPOINT, { method: 'GET', mode: 'no-cors', cache: 'no-store' });
+          isOpaque = true;
+        }
 
-        if (isSuccess) {
+        const elapsed = Math.round(performance.now() - start);
+
+        if (isOpaque) {
+          setState('unknown', 'Unknown');
+          httpStatus.textContent = 'N/A (CORS restricted)';
+        } else if (res.ok) {
           setState('up', 'Operational');
+          httpStatus.textContent = String(res.status);
         } else {
           setState('down', `Error ${res.status}`);
+          httpStatus.textContent = String(res.status);
         }
         responseTime.textContent = `${elapsed} ms`;
-        httpStatus.textContent   = code;
       } catch (err) {
         const elapsed = Math.round(performance.now() - start);
         setState('down', 'Unreachable');
