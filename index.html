@@ -125,6 +125,8 @@
     .state-down  .pulse-ring::before    { border-color: #ff4d6a; }
     .state-checking .pulse-ring span    { background: #f0b429; }
     .state-checking .pulse-ring::before { border-color: #f0b429; }
+    .state-unknown  .pulse-ring span    { background: #f0b429; }
+    .state-unknown  .pulse-ring::before { border-color: #f0b429; }
 
     .status-text {
       font-size: 1.1rem;
@@ -133,6 +135,7 @@
     .state-up    .status-text { color: #22d47a; }
     .state-down  .status-text { color: #ff4d6a; }
     .state-checking .status-text { color: #f0b429; }
+    .state-unknown  .status-text { color: #f0b429; }
 
     /* Detail row */
     .detail-row {
@@ -273,8 +276,8 @@
         const elapsed = Math.round(performance.now() - start);
 
         if (isOpaque) {
-          setState('up', 'Operational');
-          httpStatus.textContent = 'Reachable (CORS restricted)';
+          setState('unknown', 'Unknown');
+          httpStatus.textContent = 'N/A (CORS restricted)';
         } else if (res.ok) {
           setState('up', 'Operational');
           httpStatus.textContent = String(res.status);
