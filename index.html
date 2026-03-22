@@ -261,18 +261,28 @@
 
       const start = performance.now();
       try {
-        const res = await fetch(ENDPOINT, { method: 'GET', mode: 'cors', cache: 'no-store' });
-        const elapsed = Math.round(performance.now() - start);
-        const isSuccess = res.status >= 200 && res.status < 300;
-        const code = String(res.status);
+        let res, isOpaque = false;
+        try {
+          res = await fetch(ENDPOINT, { method: 'GET', mode: 'cors', cache: 'no-store' });
+        } catch (_corsErr) {
+          // CORS not supported; fall back to no-cors to test basic reachability.
+          res = await fetch(ENDPOINT, { method: 'GET', mode: 'no-cors', cache: 'no-store' });
+          isOpaque = true;
+        }
 
-        if (isSuccess) {
+        const elapsed = Math.round(performance.now() - start);
+
+        if (isOpaque) {
           setState('up', 'Operational');
+          httpStatus.textContent = 'Reachable (CORS restricted)';
+        } else if (res.ok) {
+          setState('up', 'Operational');
+          httpStatus.textContent = String(res.status);
         } else {
           setState('down', `Error ${res.status}`);
+          httpStatus.textContent = String(res.status);
         }
         responseTime.textContent = `${elapsed} ms`;
-        httpStatus.textContent   = code;
       } catch (err) {
         const elapsed = Math.round(performance.now() - start);
         setState('down', 'Unreachable');
